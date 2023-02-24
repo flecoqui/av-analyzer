@@ -1,0 +1,21 @@
+{
+  "version": "221215.174614",
+  "storageAccountResultUrl": "https://eva8301sto.blob.core.windows.net/result",
+  "storageAccountResultSASToken": "se=2022-12-22T16%3A21Z&sp=rwdl&spr=https&sv=2021-06-08&sr=c&skoid=8548938e-867a-43a6-8f96-3271b4baf055&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2022-12-15T16%3A21%3A09Z&ske=2022-12-22T16%3A21%3A00Z&sks=b&skv=2021-06-08&sig=NWIUrPi2Uh95hO3YKXCzMHPy2LS5y/sQLsb60edSl/I%3D",
+  "storageAccountRecordUrl": "https://eva8301sto.blob.core.windows.net/record",
+  "storageAccountRecordSASToken": "se=2022-12-22T16%3A21Z&sp=rwdl&spr=https&sv=2021-06-08&sr=c&skoid=8548938e-867a-43a6-8f96-3271b4baf055&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2022-12-15T16%3A21%3A07Z&ske=2022-12-22T16%3A21%3A00Z&sks=b&skv=2021-06-08&sig=ABkYduNWaxPCWk7C2fw%2BmgAwuW1cHU4hSx7Fj/x8XUY%3D",
+  "storageFolder": "version1.0",
+  "cameraUrlPrefix": "http://eva8301vm.eastus.cloudapp.azure.com:8080/hls",
+  "cameraList": "camera1,camera2",
+  "logLevel": "debug",
+  "frameExtensions": [
+    "jpg",
+    "png"
+  ],
+  "videoExtensions": [
+    "mp4"
+  ],
+  "resultExtensions": [
+    "json"
+  ]
+}

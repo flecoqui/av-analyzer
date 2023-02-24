@@ -1,0 +1,209 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namePrefix": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 50,
+      "metadata": {
+        "description": "Service name prefix must only contain lowercase letters, digits or dashes, cannot use dash as the first two or last one characters, cannot contain consecutive dashes, and is limited between 2 and 50 characters in length."
+      }
+    },
+    "computerVisionSku": {
+      "type": "string",
+      "defaultValue": "S1",
+      "allowedValues": [
+        "S1",
+        "F0"
+      ]
+    },
+    "customVisionSku": {
+      "type": "string",
+      "defaultValue": "S0",
+      "allowedValues": [
+        "S0",
+        "F0"
+      ]
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "ComputerVisionAccountName": "[concat(parameters('namePrefix'), 'computervision')]",
+    "CustomVisionTrainingAccountName": "[concat(parameters('namePrefix'), 'customvisiontraining')]",
+    "CustomVisionPredictionAccountName": "[concat(parameters('namePrefix'), 'customvisionprediction')]",
+    "storageAccountName": "[concat(parameters('namePrefix'), 'sto')]",
+    "registryName": "[concat(parameters('namePrefix'), 'acr')]",
+    "resultContainerName": "result",
+    "recordContainerName": "record",
+    "contentContainerName": "content"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('ComputerVisionAccountName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "[parameters('computerVisionsku')]"
+      },
+      "kind": "ComputerVision",
+      "properties": {
+        "apiProperties": {
+          "statisticsEnabled": false
+        }
+      }
+    },    
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('CustomVisionTrainingAccountName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "[parameters('customVisionsku')]"
+      },
+      "kind": "CustomVision.Training",
+      "properties": {
+        "apiProperties": {
+          "statisticsEnabled": false
+        }
+      }
+    },    
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('CustomVisionPredictionAccountName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "[parameters('customVisionsku')]"
+      },
+      "kind": "CustomVision.Prediction",
+      "properties": {
+        "apiProperties": {
+          "statisticsEnabled": false
+        }
+      }
+    },    
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "comments": "The basic sample scenarios do not require a registry. However, this will be used for more advanced scenarios.",
+      "apiVersion": "2019-05-01",
+      "name": "[variables('registryName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+          "name": "Basic"
+      },
+      "properties": {
+          "adminUserEnabled": false
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2019-04-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "Storage",
+      "resources": [
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2019-04-01",
+          "name": "[concat('default/', variables('recordContainerName'))]",
+          "dependsOn": [
+            "[variables('storageAccountName')]"
+          ],
+          "properties": {
+            "publicAccess": "None"
+          }
+        },
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2019-04-01",
+          "name": "[concat('default/', variables('resultContainerName'))]",
+          "dependsOn": [
+            "[variables('storageAccountName')]"
+          ],
+          "properties": {
+            "publicAccess": "None"
+          }
+        },
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2019-04-01",
+          "name": "[concat('default/', variables('contentContainerName'))]",
+          "dependsOn": [
+            "[variables('storageAccountName')]"
+          ],
+          "properties": {
+            "publicAccess": "None"
+          }
+        }
+
+      ]
+    }    
+  ],
+  "outputs": {
+    "storageAccount": {
+      "type": "string",
+      "value": "[variables('StorageAccountName')]"
+    },    
+    "contentContainer": {
+      "type": "string",
+      "value": "[variables('contentContainerName')]"
+    },
+    "recordContainer": {
+      "type": "string",
+      "value": "[variables('recordContainerName')]"
+    },
+    "resultContainer": {
+      "type": "string",
+      "value": "[variables('resultContainerName')]"
+    },
+    "ComputerVisionAccountName": {
+      "type": "string",
+      "value": "[variables('ComputerVisionAccountName')]"
+    },
+    "ComputerVisionKey": {
+      "type": "string",
+      "value": "[listKeys(concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/',variables('ComputerVisionAccountName')),'2022-03-01').key1]"
+    },
+    "ComputerVisionEndpoint": {
+      "type": "string",
+      "value": "[concat('https://',variables('location'),'.api.cognitive.microsoft.com/vision/v3.2/analyze?visualFeatures=Objects,Tags&details=Landmarks&language=en&model-version=latest')]"
+    },
+    "CustomVisionTrainingAccountName": {
+      "type": "string",
+      "value": "[variables('CustomVisionTrainingAccountName')]"
+    },
+    "CustomVisionTrainingKey": {
+      "type": "string",
+      "value": "[listKeys(concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/',variables('CustomVisionTrainingAccountName')),'2022-03-01').key1]"
+    },
+    "CustomVisionTrainingEndpoint": {
+      "type": "string",
+      "value": "[concat('https://',variables('CustomVisionTrainingAccountName'),'.cognitiveservices.azure.com/customvision/v3.0/Training')]"
+    },
+    "CustomVisionPredictionAccountName": {
+      "type": "string",
+      "value": "[variables('CustomVisionPredictionAccountName')]"
+    },
+    "CustomVisionPredictionKey": {
+      "type": "string",
+      "value": "[listKeys(concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/',variables('CustomVisionPredictionAccountName')),'2022-03-01').key1]"
+    },
+    "CustomVisionPredictionEndpoint": {
+      "type": "string",
+      "value": "[concat('https://',variables('CustomVisionPredictionAccountName'),'.cognitiveservices.azure.com/customvision/v3.0/Prediction')]"
+    },
+    "registryName": {
+      "type": "string",
+      "value": "[variables('registryName')]"
+    },
+    "acrLoginServer": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries',variables('registryName')),'2017-10-01').loginServer]"
+    }
+  }
+}
