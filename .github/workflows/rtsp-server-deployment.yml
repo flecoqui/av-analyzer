@@ -57,6 +57,7 @@ jobs:
           fi
 
   build:
+    needs: infrastructure
     runs-on: ubuntu-22.04
     env:
       RESOURCE_GROUP_NAME: "rg${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
@@ -102,6 +103,7 @@ jobs:
 
 
   deploy:
+    needs: build
     runs-on: ubuntu-22.04
     env:
       RESOURCE_GROUP_NAME: "rg${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
