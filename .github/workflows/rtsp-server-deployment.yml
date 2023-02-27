@@ -1,4 +1,4 @@
-name: RTSPServer application
+name: Build and Deploy RTSPServer
 on:
   workflow_dispatch:
     inputs:
@@ -76,11 +76,12 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - uses: azure/docker-login@v1
-        with:
-          login-server: ${{ steps.acr.outputs.acrUrl }}
-          username: ${{ steps.acr.outputs.acrAdminUsername }}
-          password: ${{ steps.acr.outputs.acrAdminPassword }}
+      #- uses: azure/docker-login@v1
+      #  with:
+      #    login-server: ${{ steps.acr.outputs.acrUrl }}
+      #    username: ${{ steps.acr.outputs.acrAdminUsername }}
+      #    password: ${{ steps.acr.outputs.acrAdminPassword }}
+
       - name: Build and push Docker images to ACR
         run: |
           # Build RTSP server for RTSP stream emulation 
@@ -95,6 +96,11 @@ jobs:
           cd ./envs/container/docker/rtspserver/${FLAVOR}
           mkdir -p ./input
           cp ./../../../../../content/input/*.mp4 ./input
+          
+          az acr login  --name ${{ env.CONTAINER_REGISTRY_NAME }}
+          docker login ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}
+
+          # az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} .
 
           docker build  -f Dockerfile --build-arg EVA_RTSP_SERVER_PORT_RTSP=${RTSP_SERVER_PORT} -t ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} . 
           docker tag ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}  
