@@ -1,5 +1,5 @@
 name: RTSPServer application
-
+on:
   workflow_dispatch:
     inputs:
       ENVIRONMENT:
