@@ -14,7 +14,7 @@ on:
       AZURE_APP_PREFIX:
         description: "Application prefix used for naming"
         required: true
-        default: "rtspserver"
+        default: "rtsp9999"
       AZURE_REGION:
         description: "Azure Region for the deployment"
         required: true
@@ -99,6 +99,42 @@ jobs:
           docker tag ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}  
           docker push ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG}
           docker push ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}
+
+
+  deploy:
+    runs-on: ubuntu-22.04
+    env:
+      RESOURCE_GROUP_NAME: "rg${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
+      CONTAINER_REGISTRY_NAME: "acr${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
+      CONTAINER_INSTANCE_NAME: "aci${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
+      CONTAINER_INSTANCE_IDENTITY_NAME: "aciid${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
+      AZURE_REGION: "{{ github.event.inputs.AZURE_REGION }}"
+      CONTAINER_REGISTRY_LOGIN_SERVER: $(az acr show -n "acr${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}" -g "rg${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"  --query loginServer)
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v3
+      - name: Azure Login
+        uses: azure/login@v1
+        continue-on-error: false
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/docker-login@v1
+        with:
+          login-server: ${{ steps.acr.outputs.acrUrl }}
+          username: ${{ steps.acr.outputs.acrAdminUsername }}
+          password: ${{ steps.acr.outputs.acrAdminPassword }}
+      - name: Deploy images to ACI
+        run: |
+          # Build RTSP server for RTSP stream emulation 
+          APP_VERSION=$(date +"%y%m%d.%H%M%S")
+          IMAGE_TAG=${APP_VERSION}
+          ALTERNATIVE_TAG="latest"
+          IMAGE_FOLDER="streamer"
+          RTSPSERVER_NAME="rtspserver"
+          FLAVOR="alpine"
+          IMAGE_NAME="${RTSPSERVER_NAME}-${FLAVOR}-image"
+          RTSP_SERVER_PORT=554
 
           echo "Create User Assigned Identity ${{ env.CONTAINER_INSTANCE_IDENTITY_NAME }}"
           cmd="az identity create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.CONTAINER_INSTANCE_IDENTITY_NAME }}"
