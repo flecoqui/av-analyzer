@@ -134,6 +134,10 @@ jobs:
           IMAGE_NAME="${RTSPSERVER_NAME}-${FLAVOR}-image"
           RTSP_SERVER_PORT=554
 
+          cd ./envs/container/docker/rtspserver/${FLAVOR}
+          mkdir -p ./input
+          cp ./../../../../../content/input/*.mp4 ./input
+
           echo "Create User Assigned Identity ${{ env.CONTAINER_INSTANCE_IDENTITY_NAME }}"
           cmd="az identity create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.CONTAINER_INSTANCE_IDENTITY_NAME }}"
           echo "$cmd"
@@ -166,7 +170,7 @@ jobs:
           for i in ./input/*.mp4 
           do 
             echo "Run the following command:"
-            echo "  ffprobe -i rtsp://${DNS_NAME}:${ARG_RTSP_SERVER_PORT}/media/$(basename $i)"
+            echo "  ffprobe -i rtsp://${DNS_NAME}:${RTSP_SERVER_PORT}/media/$(basename $i)"
           done
           echo "Deploying the RTSP server to emulate the cameras done"
 
