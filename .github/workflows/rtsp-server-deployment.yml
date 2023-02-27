@@ -75,13 +75,6 @@ jobs:
         continue-on-error: false
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      #- uses: azure/docker-login@v1
-      #  with:
-      #    login-server: ${{ steps.acr.outputs.acrUrl }}
-      #    username: ${{ steps.acr.outputs.acrAdminUsername }}
-      #    password: ${{ steps.acr.outputs.acrAdminPassword }}
-
       - name: Build and push Docker images to ACR
         run: |
           # Build RTSP server for RTSP stream emulation 
@@ -103,24 +96,12 @@ jobs:
           echo "$cmd"
           eval "$cmd"  
 
-          # cmd="docker login ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}"
-          # echo "$cmd"
-          # eval "$cmd"  
-
           cmd="az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} ."
           echo "$cmd"
           eval "$cmd"  
           cmd="az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} ."
           echo "$cmd"
           eval "$cmd"  
-
-
-
-          # docker build  -f Dockerfile --build-arg EVA_RTSP_SERVER_PORT_RTSP=${RTSP_SERVER_PORT} -t ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} . 
-          # docker tag ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}  
-          # docker push ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG}
-          # docker push ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}
-
 
   deploy:
     needs: build
@@ -141,11 +122,6 @@ jobs:
         continue-on-error: false
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - uses: azure/docker-login@v1
-        with:
-          login-server: ${{ steps.acr.outputs.acrUrl }}
-          username: ${{ steps.acr.outputs.acrAdminUsername }}
-          password: ${{ steps.acr.outputs.acrAdminPassword }}
       - name: Deploy images to ACI
         run: |
           # Build RTSP server for RTSP stream emulation 
