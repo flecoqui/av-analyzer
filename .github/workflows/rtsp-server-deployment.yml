@@ -93,12 +93,19 @@ jobs:
           FLAVOR="alpine"
           IMAGE_NAME="${RTSPSERVER_NAME}-${FLAVOR}-image"
           RTSP_SERVER_PORT=554
+          
           cd ./envs/container/docker/rtspserver/${FLAVOR}
+
           mkdir -p ./input
           cp ./../../../../../content/input/*.mp4 ./input
           
-          az acr login  --name ${{ env.CONTAINER_REGISTRY_NAME }}
-          docker login ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}
+          cmd="az acr login  --name ${{ env.CONTAINER_REGISTRY_NAME }}"
+          echo "$cmd"
+          eval "$cmd"  
+
+          cmd="docker login ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}"
+          echo "$cmd"
+          eval "$cmd"  
 
           # az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} .
 
