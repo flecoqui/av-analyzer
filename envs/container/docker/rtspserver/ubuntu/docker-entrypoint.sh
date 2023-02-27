@@ -2,11 +2,6 @@
 set -ef
 
 
-# Start the rtsp process
-#export RTSP_PROTOCOLS="tcp" 
-#export RTSP_RTSPPORT="$PORT_RTSP"
-#export RTSP_RTSPADDRESS="127.0.0.1:$PORT_RTSP"
-
 cat <<EOF > /rtspserverloop.sh
 while [ : ]
 do
@@ -24,7 +19,7 @@ chmod 0755 /rtspserverloop.sh
 cat <<'END_HELP' > /stream.sh
 if [ ! -z $1 ]; 
 then
-  mp=$1
+  mp=$(basename $1)
   while [ : ]
   do
     echo "Start ffmpeg streamer: from /live/mediaServer/media/$mp to rtsp://127.0.0.1:$PORT_RTSP/media/$mp" 
@@ -42,7 +37,7 @@ chmod 0755 /stream.sh
 cat <<EOF > /ffmpegloop.sh
 while [ : ]
 do
-  for i in \$(echo \$FILE_LIST | sed 's/,/ /g')
+  for i in /live/mediaServer/media/*.mp4
   do
       ps aux |grep \$i |grep -q -v grep
       STREAM_PROCESS_1_STATUS=\$?

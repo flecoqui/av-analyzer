@@ -97,7 +97,7 @@ For instance:
 8. You have access to the tools installed in the devcontainer like ffmpeg, az client,... You could use this devcontainer to stream video directly towards the virtual machines or containers  in Azure.  
 
     ```bash
-        vscode@d0b2b4ea7293:/avworkspace$ ffmpeg 
+        vscode@d0b2b4ea7293:/workspace$ ffmpeg 
     ```
 
 ## How to install, deploy, test the Audio, Video, Analytics containers with evatool.sh

@@ -903,7 +903,7 @@ checkError() {
 }
 checkDevContainerMode () {
     checkDevContainerModeResult="0"
-    if [ -f /avworkspace/.devcontainer/devcontainer.json ] 
+    if [ -f /workspace/.devcontainer/devcontainer.json ] 
     then
         checkDevContainerModeResult="1"
     fi
