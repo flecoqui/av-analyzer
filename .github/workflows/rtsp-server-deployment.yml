@@ -103,16 +103,23 @@ jobs:
           echo "$cmd"
           eval "$cmd"  
 
-          cmd="docker login ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}"
+          # cmd="docker login ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}"
+          # echo "$cmd"
+          # eval "$cmd"  
+
+          cmd="az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} ."
+          echo "$cmd"
+          eval "$cmd"  
+          cmd="az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} ."
           echo "$cmd"
           eval "$cmd"  
 
-          # az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} .
 
-          docker build  -f Dockerfile --build-arg EVA_RTSP_SERVER_PORT_RTSP=${RTSP_SERVER_PORT} -t ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} . 
-          docker tag ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}  
-          docker push ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG}
-          docker push ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}
+
+          # docker build  -f Dockerfile --build-arg EVA_RTSP_SERVER_PORT_RTSP=${RTSP_SERVER_PORT} -t ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} . 
+          # docker tag ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}  
+          # docker push ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG}
+          # docker push ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}
 
 
   deploy:
