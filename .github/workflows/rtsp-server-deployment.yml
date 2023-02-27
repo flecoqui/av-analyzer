@@ -32,7 +32,7 @@ jobs:
       RESOURCE_GROUP_NAME: "rg${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
       CONTAINER_REGISTRY_NAME: "acr${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
       CONTAINER_INSTANCE_NAME: "aci${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
-      AZURE_REGION: "*${{ github.event.inputs.AZURE_REGION }}"
+      AZURE_REGION: "${{ github.event.inputs.AZURE_REGION }}"
 
     steps:
       - name: "Checkout"
