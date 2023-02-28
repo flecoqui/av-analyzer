@@ -32,6 +32,7 @@ jobs:
       RESOURCE_GROUP_NAME: "rg${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
       CONTAINER_REGISTRY_NAME: "acr${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
       CONTAINER_INSTANCE_NAME: "aci${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
+      CONTAINER_INSTANCE_IDENTITY_NAME: "aciid${{ github.event.inputs.AZURE_APP_PREFIX }}${{ github.event.inputs.ENVIRONMENT }}"
       AZURE_REGION: "${{ github.event.inputs.AZURE_REGION }}"
 
     steps:
@@ -161,7 +162,7 @@ jobs:
           identityResourceID=$(az identity show \
           --resource-group  ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.CONTAINER_INSTANCE_IDENTITY_NAME }} \
           --query id --output tsv)
-          
+
           cmd="az container create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.CONTAINER_INSTANCE_NAME }} --image ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG} --dns-name-label ${{ env.CONTAINER_INSTANCE_NAME }} --ports ${RTSP_SERVER_PORT} -e PORT_RTSP=${RTSP_SERVER_PORT} --acr-identity ${identityResourceID}  --assign-identity ${identityResourceID}"
           echo "$cmd"
           eval "$cmd"    
