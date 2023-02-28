@@ -4,6 +4,33 @@ BASH_SCRIPT=`readlink -f "$0"`
 BASH_DIR=`dirname "$BASH_SCRIPT"`
 pushd "$BASH_DIR"  > /dev/null
 
+# Azure input parameters:
+# Update AZURE_APP_PREFIX to avoid any possible conflict
+export AZURE_APP_PREFIX="rtsp9999"
+export ENVIRONMENT="test"
+export AZURE_REGION="eastus2"
+export RESOURCE_GROUP_NAME: "rg${AZURE_APP_PREFIX}${ENVIRONMENT}"
+export CONTAINER_REGISTRY_NAME: "acr${AZURE_APP_PREFIX}${ENVIRONMENT}"
+export CONTAINER_INSTANCE_NAME: "aci${AZURE_APP_PREFIX}${ENVIRONMENT}"
+
+message="Create Resource Group  if not exists"
+echo "$message"
+if [ $(az group exists --name ${RESOURCE_GROUP_NAME}) = false ]; then
+    echo "Create resource group  ${RESOURCE_GROUP_NAME}"
+    cmd="az group create -l ${AZURE_REGION} -n ${RESOURCE_GROUP_NAME}"
+    echo "$cmd"
+    eval "$cmd"    
+fi
+message="Create Azure Container Registry  if not exists"
+echo "$message"
+if [ $(az acr check-name --name ${CONTAINER_REGISTRY_NAME} --query nameAvailable) = true ]; then
+    echo "Create Azure Container Registry  ${CONTAINER_REGISTRY_NAME}"
+    cmd="az acr create -n ${CONTAINER_REGISTRY_NAME} -g ${RESOURCE_GROUP_NAME} -l ${AZURE_REGION} --sku Basic --admin-enabled false"
+    echo "$cmd"
+    eval "$cmd"
+fi
+
+# Building container input parameters:
 export APP_VERSION=$(date +"%y%m%d.%H%M%S")
 export RTSPSERVER_NAME="rtspserver"
 export IMAGE_FOLDER="analyzer"
@@ -19,8 +46,6 @@ echo "IMAGE_NAME $IMAGE_NAME"
 echo "IMAGE_TAG $IMAGE_TAG"
 echo "ALTERNATIVE_TAG $ALTERNATIVE_TAG"
 echo "ARG_RTSP_SERVER_PORT_RTSP $ARG_RTSP_SERVER_PORT_RTSP"
-
-result=$(docker image inspect ${IMAGE_FOLDER}/$IMAGE_NAME:$ALTERNATIVE_TAG  2>/dev/null) || true
 
 mkdir -p ./input
 cp ./../../../../../content/input/*.mp4 ./input
