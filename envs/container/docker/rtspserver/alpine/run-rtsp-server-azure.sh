@@ -13,22 +13,35 @@ export RESOURCE_GROUP_NAME: "rg${AZURE_APP_PREFIX}${ENVIRONMENT}"
 export CONTAINER_REGISTRY_NAME: "acr${AZURE_APP_PREFIX}${ENVIRONMENT}"
 export CONTAINER_INSTANCE_NAME: "aci${AZURE_APP_PREFIX}${ENVIRONMENT}"
 
-message="Create Resource Group  if not exists"
-echo "$message"
+echo "Create Resource Group  if not exists"
 if [ $(az group exists --name ${RESOURCE_GROUP_NAME}) = false ]; then
     echo "Create resource group  ${RESOURCE_GROUP_NAME}"
     cmd="az group create -l ${AZURE_REGION} -n ${RESOURCE_GROUP_NAME}"
     echo "$cmd"
     eval "$cmd"    
 fi
-message="Create Azure Container Registry  if not exists"
-echo "$message"
+echo "Create Azure Container Registry  if not exists"
 if [ $(az acr check-name --name ${CONTAINER_REGISTRY_NAME} --query nameAvailable) = true ]; then
     echo "Create Azure Container Registry  ${CONTAINER_REGISTRY_NAME}"
     cmd="az acr create -n ${CONTAINER_REGISTRY_NAME} -g ${RESOURCE_GROUP_NAME} -l ${AZURE_REGION} --sku Basic --admin-enabled false"
     echo "$cmd"
     eval "$cmd"
 fi
+echo "Create User Assigned Identity ${CONTAINER_INSTANCE_IDENTITY_NAME}"
+cmd="az identity create --resource-group ${RESOURCE_GROUP_NAME} --name ${CONTAINER_INSTANCE_IDENTITY_NAME}"
+echo "$cmd"
+eval "$cmd"    
+spID=$(az identity show \
+--resource-group  ${RESOURCE_GROUP_NAME} --name ${CONTAINER_INSTANCE_IDENTITY_NAME} \
+--query principalId --output tsv)
+
+echo "Wait 30 seconds"
+sleep 30
+echo "Grant Access to the Azure Container Registry ${CONTAINER_REGISTRY_LOGIN_SERVER} from the Azure Container Instance ${CONTAINER_INSTANCE_NAME} role AcrPull"
+resourceID=$(az acr show --resource-group  ${RESOURCE_GROUP_NAME} --name ${CONTAINER_REGISTRY_NAME} --query id --output tsv)
+cmd="az role assignment create --assignee ${spID} --scope ${resourceID} --role acrpull"
+echo "$cmd"
+eval "$cmd"
 
 # Building container input parameters:
 export APP_VERSION=$(date +"%y%m%d.%H%M%S")
@@ -39,39 +52,44 @@ export IMAGE_NAME="${RTSPSERVER_NAME}-${FLAVOR}-image"
 export IMAGE_TAG=${APP_VERSION}
 export CONTAINER_NAME="${RTSPSERVER_NAME}-container"
 export ALTERNATIVE_TAG="latest"
-export ARG_RTSP_SERVER_PORT_RTSP=554
+export RTSP_SERVER_PORT_RTSP=554
 
 echo "APP_VERSION $APP_VERSION"
 echo "IMAGE_NAME $IMAGE_NAME"
 echo "IMAGE_TAG $IMAGE_TAG"
 echo "ALTERNATIVE_TAG $ALTERNATIVE_TAG"
-echo "ARG_RTSP_SERVER_PORT_RTSP $ARG_RTSP_SERVER_PORT_RTSP"
-
+echo "RTSP_SERVER_PORT_RTSP $RTSP_SERVER_PORT_RTSP"
+CONTAINER_REGISTRY_LOGIN_SERVER=$(az acr show -n "acr${AZURE_APP_PREFIX}${ENVIRONMENT}" -g "rg${AZURE_APP_PREFIX}${ENVIRONMENT}"  --query loginServer --output tsv)
 mkdir -p ./input
 cp ./../../../../../content/input/*.mp4 ./input
-cmd="docker build  -f Dockerfile --build-arg ARG_RTSP_SERVER_PORT_RTSP=${ARG_RTSP_SERVER_PORT_RTSP} -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} . " 
+echo "Build image  ${CONTAINER_REGISTRY_LOGIN_SERVER}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG}"
+cmd="az acr login  --name ${CONTAINER_REGISTRY_NAME}"
 echo "$cmd"
-eval "$cmd"
-    
-cmd="docker tag ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}"
-echo "$cmd"
-eval "$cmd"
+eval "$cmd"  
 
-docker stop ${CONTAINER_NAME} 2>/dev/null || true
-cmd="docker run  -d -it --rm --log-driver json-file --log-opt max-size=1m --log-opt max-file=3 \
- -e PORT_RTSP=${ARG_RTSP_SERVER_PORT_RTSP}  -p ${ARG_RTSP_SERVER_PORT_RTSP}:${ARG_RTSP_SERVER_PORT_RTSP}/tcp \
- --name ${CONTAINER_NAME} ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}" 
+cmd="az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} -r  ${CONTAINER_REGISTRY_NAME} -g  ${RESOURCE_GROUP_NAME} ."
 echo "$cmd"
-eval "$cmd"
+eval "$cmd"  
+cmd="az acr import --name  ${CONTAINER_REGISTRY_NAME} -g  ${RESOURCE_GROUP_NAME} --source ${CONTAINER_REGISTRY_LOGIN_SERVER}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} --image ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG} --force"
+echo "$cmd"
+eval "$cmd"  
 
-CONTAINER_RTSPSERVER_IP=$(docker container inspect "${CONTAINER_NAME}" | jq -r '.[].NetworkSettings.Networks.bridge.IPAddress')
+identityResourceID=$(az identity show \
+--resource-group  ${RESOURCE_GROUP_NAME} --name ${CONTAINER_INSTANCE_IDENTITY_NAME} \
+--query id --output tsv)
+
+cmd="az container create --resource-group ${RESOURCE_GROUP_NAME} --name ${CONTAINER_INSTANCE_NAME} --image ${CONTAINER_REGISTRY_LOGIN_SERVER}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG} --dns-name-label ${CONTAINER_INSTANCE_NAME} --ports ${RTSP_SERVER_PORT} -e PORT_RTSP=${RTSP_SERVER_PORT} --acr-identity ${identityResourceID}  --assign-identity ${identityResourceID}"
+echo "$cmd"
+eval "$cmd"    
+DNS_NAME=$(az container show --resource-group ${RESOURCE_GROUP_NAME} --name ${CONTAINER_INSTANCE_NAME} | jq -r '.ipAddress.fqdn')
 for i in ./input/*.mp4 
 do 
-echo "Run the following command from a local container:"
-echo "  ffprobe -i rtsp://${CONTAINER_RTSPSERVER_IP}:${ARG_RTSP_SERVER_PORT_RTSP}/media/$(basename $i)"
-echo "Run the following command from the host:"
-echo "  ffprobe -i rtsp://127.0.0.1:${ARG_RTSP_SERVER_PORT_RTSP}/media/$(basename $i)"
+echo "Run the following command:"
+echo "  ffprobe -i rtsp://${DNS_NAME}:${RTSP_SERVER_PORT}/media/$(basename $i)"
 done
+echo "Deploying the RTSP server to emulate the cameras done"
+
+
 # Remove temporary folder with mp4 files
 rm ./input/*.mp4 > /dev/null
 rmdir ./input > /dev/null
