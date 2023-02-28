@@ -46,8 +46,7 @@ jobs:
       - name: Create Resource Group and Azure Container Registry
         continue-on-error: false
         run: |
-          message="Create Resource Group  if not exists"
-          echo "$message"
+          echo "Create Resource Group  if not exists"
           if [ $(az group exists --name ${{ env.RESOURCE_GROUP_NAME }}) = false ]; then
               echo "Create resource group  ${{ env.RESOURCE_GROUP_NAME }}"
               az group create -l ${{ env.AZURE_REGION }} -n ${{ env.RESOURCE_GROUP_NAME }}

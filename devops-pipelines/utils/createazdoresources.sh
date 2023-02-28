@@ -60,7 +60,7 @@ spkey=
 pipelineName="Load-Testing-EventHubs" 
 pipelineDescription="Load Testing Event Hubs with restricted public access endpoint"
 pipelineBranch="main"
-variableGroup="load-testing-vg"
+variableGroup="rtsp-server-vg"
 region="eastus2"
 while getopts ":o:p:y:t:s:i:k:r:" opt; do
     case $opt in
@@ -161,13 +161,9 @@ then
     if [ -z "${vgid}" ]
     then
         infoMessage "Creating Variables Group..." 
-        vgJsonResult=$(az pipelines variable-group create --org "https://dev.azure.com/${organization}/" --project "${project}"  --name "${variableGroup}" --authorize true --variables AZURE_APP_PREFIX=evhub$(shuf -i 1000-9999 -n 1) AZURE_REGION="${region}" SERVICE_CONNECTION="${scName}" )
+        vgJsonResult=$(az pipelines variable-group create --org "https://dev.azure.com/${organization}/" --project "${project}"  --name "${variableGroup}" --authorize true --variables SERVICE_CONNECTION="${scName}" )
     else
         infoMessage "Updating Variables Group..." 
-        vgJsonResult=$(az pipelines variable-group variable update --org "https://dev.azure.com/${organization}/" --project "${project}"  --group-id "${vgid}"  --name "AZURE_APP_PREFIX" --value "evhub$(shuf -i 1000-9999 -n 1)"  )
-        # echo "$vgJsonResult"
-        vgJsonResult=$(az pipelines variable-group variable update --org "https://dev.azure.com/${organization}/" --project "${project}"  --group-id "${vgid}"  --name "AZURE_REGION" --value "${region}" )
-        # echo "$vgJsonResult"
         vgJsonResult=$(az pipelines variable-group variable update --org "https://dev.azure.com/${organization}/" --project "${project}"  --group-id "${vgid}"  --name "SERVICE_CONNECTION" --value "${scName}" )
         # echo "$vgJsonResult"
     fi
@@ -185,10 +181,10 @@ then
     if [ -z "${pipelineId}" ]
     then
         infoMessage "Creating Pipeline..." 
-        pipelineJsonResult=$(az pipelines create  --org "https://dev.azure.com/${organization}/" --project "${project}" --name "${pipelineName}" --description "${pipelineDescription}" --repository "${repository}" --branch "${pipelineBranch}" --repository-type tfsgit --yml-path ./devops-pipelines/azure-pipelines/azure-pipelines-load-testing-eventhub-firewall.yml)
+        pipelineJsonResult=$(az pipelines create  --org "https://dev.azure.com/${organization}/" --project "${project}" --name "${pipelineName}" --description "${pipelineDescription}" --repository "${repository}" --branch "${pipelineBranch}" --repository-type tfsgit --yml-path ./devops-pipelines/azure-pipeline/azure-pipeline-rtsp-server-deployment.yml)
     else
         infoMessage "Updating Pipeline..." 
-        pipelineJsonResult=$(az pipelines update  --org "https://dev.azure.com/${organization}/" --project "${project}" --id "${pipelineId}" --description "${pipelineDescription}"  --branch "${pipelineBranch}"  --yml-path ./devops-pipelines/azure-pipelines/azure-pipelines-load-testing-eventhub-firewall.yml)
+        pipelineJsonResult=$(az pipelines update  --org "https://dev.azure.com/${organization}/" --project "${project}" --id "${pipelineId}" --description "${pipelineDescription}"  --branch "${pipelineBranch}"  --yml-path ./devops-pipelines/azure-pipelines/azure-pipeline-rtsp-server-deployment.yml)
     fi
 else
     errorMessage "Error while creating Variable Group:  ${variableGroup}"
