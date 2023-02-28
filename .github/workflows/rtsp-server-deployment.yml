@@ -99,7 +99,8 @@ jobs:
           cmd="az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} ."
           echo "$cmd"
           eval "$cmd"  
-          cmd="az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} ."
+          cmd="az acr import --name  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} --source ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} --image ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG} --force"
+          # cmd="az acr build -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG} -r  ${{ env.CONTAINER_REGISTRY_NAME }} -g  ${{ env.RESOURCE_GROUP_NAME }} ."
           echo "$cmd"
           eval "$cmd"  
 

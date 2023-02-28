@@ -21,21 +21,16 @@ echo "ALTERNATIVE_TAG $ALTERNATIVE_TAG"
 echo "ARG_RTSP_SERVER_PORT_RTSP $ARG_RTSP_SERVER_PORT_RTSP"
 
 result=$(docker image inspect ${IMAGE_FOLDER}/$IMAGE_NAME:$ALTERNATIVE_TAG  2>/dev/null) || true
-#if [[ ${result} == "[]" ]]; then
-    # Copy mp4 files from the content folder
-    mkdir -p ./input
-    cp ./../../../../../content/input/*.mp4 ./input
-    cmd="docker build  -f Dockerfile --build-arg ARG_RTSP_SERVER_PORT_RTSP=${ARG_RTSP_SERVER_PORT_RTSP} -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} . " 
-    echo "$cmd"
-    eval "$cmd"
+mkdir -p ./input
+cp ./../../../../../content/input/*.mp4 ./input
+cmd="docker build  -f Dockerfile --build-arg ARG_RTSP_SERVER_PORT_RTSP=${ARG_RTSP_SERVER_PORT_RTSP} -t ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} . " 
+echo "$cmd"
+eval "$cmd"
     
-    #docker push ${IMAGE_NAME}:${IMAGE_TAG}
-    # Push with alternative tag
-    cmd="docker tag ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}"
-    echo "$cmd"
-    eval "$cmd"
-    #docker push ${IMAGE_NAME}:${ALTERNATIVE_TAG}
-#fi
+cmd="docker tag ${IMAGE_FOLDER}/${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_FOLDER}/${IMAGE_NAME}:${ALTERNATIVE_TAG}"
+echo "$cmd"
+eval "$cmd"
+
 docker stop ${CONTAINER_NAME} 2>/dev/null || true
 cmd="docker run  -d -it --rm --log-driver json-file --log-opt max-size=1m --log-opt max-file=3 \
  -e PORT_RTSP=${ARG_RTSP_SERVER_PORT_RTSP}  -p ${ARG_RTSP_SERVER_PORT_RTSP}:${ARG_RTSP_SERVER_PORT_RTSP}/tcp \
