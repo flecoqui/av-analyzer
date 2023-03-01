@@ -51,7 +51,8 @@ jobs:
               echo "Create resource group  ${{ env.RESOURCE_GROUP_NAME }}"
               az group create -l ${{ env.AZURE_REGION }} -n ${{ env.RESOURCE_GROUP_NAME }}
           fi
-          if [ $(az acr check-name --name ${{ env.CONTAINER_REGISTRY_NAME }} --query nameAvailable) = true ]; then
+          ACR_NAME=$(az acr list --resource-group ${{ env.RESOURCE_GROUP_NAME }} | jq -r '.[0].name') || true
+          if [ -z "${ACR_NAME}" ] || [ "${ACR_NAME}" == "null" ] || [ "${ACR_NAME}" != "${{ env.CONTAINER_REGISTRY_NAME }}" ]; then
             echo "Create Azure Container Registry  ${{ env.CONTAINER_REGISTRY_NAME }}"
             az acr create -n ${{ env.CONTAINER_REGISTRY_NAME }} -g ${{ env.RESOURCE_GROUP_NAME }} -l ${{ env.AZURE_REGION }} --sku Basic --admin-enabled false            
           fi
