@@ -57,7 +57,7 @@ subscription=
 tenant=
 spid=
 spkey=
-pipelineName="Load-Testing-EventHubs" 
+pipelineName="RTSP-Streamer" 
 pipelineDescription="Load Testing Event Hubs with restricted public access endpoint"
 pipelineBranch="main"
 variableGroup="rtsp-server-vg"
@@ -184,7 +184,7 @@ then
         pipelineJsonResult=$(az pipelines create  --org "https://dev.azure.com/${organization}/" --project "${project}" --name "${pipelineName}" --description "${pipelineDescription}" --repository "${repository}" --branch "${pipelineBranch}" --repository-type tfsgit --yml-path ./devops-pipelines/azure-pipeline/azure-pipeline-rtsp-server-deployment.yml)
     else
         infoMessage "Updating Pipeline..." 
-        pipelineJsonResult=$(az pipelines update  --org "https://dev.azure.com/${organization}/" --project "${project}" --id "${pipelineId}" --description "${pipelineDescription}"  --branch "${pipelineBranch}"  --yml-path ./devops-pipelines/azure-pipelines/azure-pipeline-rtsp-server-deployment.yml)
+        pipelineJsonResult=$(az pipelines update  --org "https://dev.azure.com/${organization}/" --project "${project}" --id "${pipelineId}" --description "${pipelineDescription}"  --branch "${pipelineBranch}"  --yml-path ./devops-pipelines/azure-pipeline/azure-pipeline-rtsp-server-deployment.yml)
     fi
 else
     errorMessage "Error while creating Variable Group:  ${variableGroup}"

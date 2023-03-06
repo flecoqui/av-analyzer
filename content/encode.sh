@@ -44,7 +44,7 @@ printProgress(){
 ##############################################################################
 #- encoding function
 ##############################################################################
-encodvideowithpreamble(){
+encodevideowithpreamble(){
 ARG_INPUT_FILE=$1
 ARG_DURATION=$2
 ARG_BITRATE=$3
@@ -66,7 +66,7 @@ ARG_OUTPUT_FILE=${INPUT_FOLDER}encoded-$(echo $INPUT_FILENAME | sed -e "s/.${INP
     echo "${cmd}"
     eval ${cmd}
 }
-encodvideo(){
+encodevideo(){
 ARG_INPUT_FILE=$1
 ARG_DURATION=$2
 ARG_BITRATE=$3
@@ -99,7 +99,7 @@ displayframes(){
     eval ${cmd}
 }
 
-BITRATE=000000
+BITRATE=3000000
 FRAME_RATE=25
 printMessage "Creating start chunk..."
 cmd="ffmpeg -f lavfi -i color=c=black:s=1080x1920:r=25:d=1 -force_key_frames 00:00:00.000 -map 0:v  -b:v ${BITRATE}  -vcodec libx264 -g $((FRAME_RATE-1)) -r ${FRAME_RATE}  -vf format=yuv420p -filter:v fps=${FRAME_RATE} -y ./input/prevideo.mp4 -v error"
@@ -127,7 +127,7 @@ do
     echo "${cmd}"
     eval ${cmd}
 
-    encodvideo ${INPUT_FILE} ${DURATION} ${BITRATE} ${FRAME_RATE}
+    encodevideo ${INPUT_FILE} ${DURATION} ${BITRATE} ${FRAME_RATE}
     displayframes ${INPUT_FILE}
 done
 
@@ -136,7 +136,7 @@ FILE_LIST="./input/camera-300s.mkv,./input/lots_015.mkv,./input/lots_284.mkv"
 for i in $(echo ${FILE_LIST} | sed 's/,/ /g')
 do
     INPUT_FILE=$i
-    encodvideo ${INPUT_FILE} ${DURATION} ${BITRATE} ${FRAME_RATE}
+    encodevideo ${INPUT_FILE} ${DURATION} ${BITRATE} ${FRAME_RATE}
     displayframes ${INPUT_FILE}
 done
 cmd="rm ./input/prevideo.mp4"

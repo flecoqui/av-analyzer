@@ -36,6 +36,16 @@ export CONTAINER_REGISTRY_NAME="acr${AZURE_APP_PREFIX}${ENVIRONMENT}"
 export CONTAINER_INSTANCE_NAME="aci${AZURE_APP_PREFIX}${ENVIRONMENT}"
 export CONTAINER_INSTANCE_IDENTITY_NAME="aciid${AZURE_APP_PREFIX}${ENVIRONMENT}"
 
+# get Azure Subscription and Tenant Id if already connected
+AZURE_SUBSCRIPTION_ID=$(az account show --query id --output tsv 2> /dev/null) || true
+AZURE_TENANT_ID=$(az account show --query tenantId -o tsv 2> /dev/null) || true
+
+# check if configuration file is set 
+if [[ -z ${AZURE_SUBSCRIPTION_ID} || -z ${AZURE_TENANT_ID}  ]]; then
+    errorMessage "Connection to Azure required, launch 'az login'"
+    exit 1
+fi
+
 infoMessage "Create Resource Group  if not exists"
 if [ $(az group exists --name ${RESOURCE_GROUP_NAME}) = false ]; then
     infoMessage "Create resource group  ${RESOURCE_GROUP_NAME}"
@@ -45,7 +55,8 @@ if [ $(az group exists --name ${RESOURCE_GROUP_NAME}) = false ]; then
     checkError    
 fi
 infoMessage "Create Azure Container Registry  if not exists"
-if [ $(az acr check-name --name ${CONTAINER_REGISTRY_NAME} --query nameAvailable) = true ]; then
+ACR_NAME=$(az acr list --resource-group ${RESOURCE_GROUP_NAME} | jq -r '.[0].name') || true
+if [ -z "${ACR_NAME}" ] || [ "${ACR_NAME}" == "null" ] || [ "${ACR_NAME}" != "${CONTAINER_REGISTRY_NAME}" ]; then
     infoMessage "Create Azure Container Registry  ${CONTAINER_REGISTRY_NAME}"
     cmd="az acr create -n ${CONTAINER_REGISTRY_NAME} -g ${RESOURCE_GROUP_NAME} -l ${AZURE_REGION} --sku Basic --admin-enabled false"
     echo "$cmd"
